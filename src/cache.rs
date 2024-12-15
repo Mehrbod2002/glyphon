@@ -220,96 +220,44 @@ impl Cache {
 
         let mut cache = cache.write().expect("Write pipeline cache");
 
-        #[cfg(not(feature = "egui"))]
-        {
-            cache
-                .iter()
-                .find(|(fmt, ms, ds, _)| {
-                    fmt == &format && ms == &multisample && ds == &depth_stencil
-                })
-                .map(|(_, _, _, p)| Arc::clone(p))
-                .unwrap_or_else(|| {
-                    let pipeline =
-                        Arc::new(device.create_render_pipeline(&RenderPipelineDescriptor {
-                            label: Some("glyphon pipeline"),
-                            layout: Some(pipeline_layout),
-                            vertex: VertexState {
-                                module: shader,
-                                entry_point: Some("vs_main"),
-                                buffers: vertex_buffers,
-                                compilation_options: PipelineCompilationOptions::default(),
-                            },
-                            fragment: Some(FragmentState {
-                                module: shader,
-                                entry_point: Some("fs_main"),
-                                targets: &[Some(ColorTargetState {
-                                    format,
-                                    blend: Some(BlendState::ALPHA_BLENDING),
-                                    write_mask: ColorWrites::default(),
-                                })],
-                                compilation_options: PipelineCompilationOptions::default(),
-                            }),
-                            primitive: PrimitiveState {
-                                topology: PrimitiveTopology::TriangleStrip,
-                                ..Default::default()
-                            },
-                            depth_stencil: depth_stencil.clone(),
-                            multisample,
-                            multiview: None,
-                            cache: None,
-                        }));
+        cache
+            .iter()
+            .find(|(fmt, ms, ds, _)| fmt == &format && ms == &multisample && ds == &depth_stencil)
+            .map(|(_, _, _, p)| Arc::clone(p))
+            .unwrap_or_else(|| {
+                let pipeline = Arc::new(device.create_render_pipeline(&RenderPipelineDescriptor {
+                    label: Some("glyphon pipeline"),
+                    layout: Some(pipeline_layout),
+                    vertex: VertexState {
+                        module: shader,
+                        entry_point: Some("vs_main"),
+                        buffers: vertex_buffers,
+                        compilation_options: PipelineCompilationOptions::default(),
+                    },
+                    fragment: Some(FragmentState {
+                        module: shader,
+                        entry_point: Some("fs_main"),
+                        targets: &[Some(ColorTargetState {
+                            format,
+                            blend: Some(BlendState::ALPHA_BLENDING),
+                            write_mask: ColorWrites::default(),
+                        })],
+                        compilation_options: PipelineCompilationOptions::default(),
+                    }),
+                    primitive: PrimitiveState {
+                        topology: PrimitiveTopology::TriangleStrip,
+                        ..Default::default()
+                    },
+                    depth_stencil: depth_stencil.clone(),
+                    multisample,
+                    multiview: None,
+                    cache: None,
+                }));
 
-                    cache.push((format, multisample, depth_stencil, pipeline.clone()));
+                cache.push((format, multisample, depth_stencil, pipeline.clone()));
 
-                    pipeline
-                })
-                .clone()
-        }
-
-        #[cfg(feature = "egui")]
-        {
-            cache
-                .iter()
-                .find(|(fmt, ms, ds, _)| {
-                    fmt == &format && ms == &multisample && ds == &depth_stencil
-                })
-                .map(|(_, _, _, p)| Arc::clone(p))
-                .unwrap_or_else(|| {
-                    let pipeline =
-                        Arc::new(device.create_render_pipeline(&RenderPipelineDescriptor {
-                            label: Some("glyphon pipeline"),
-                            layout: Some(pipeline_layout),
-                            vertex: VertexState {
-                                module: shader,
-                                entry_point: "vs_main",
-                                buffers: vertex_buffers,
-                                compilation_options: PipelineCompilationOptions::default(),
-                            },
-                            fragment: Some(FragmentState {
-                                module: shader,
-                                entry_point: "fs_main",
-                                targets: &[Some(ColorTargetState {
-                                    format,
-                                    blend: Some(BlendState::ALPHA_BLENDING),
-                                    write_mask: ColorWrites::default(),
-                                })],
-                                compilation_options: PipelineCompilationOptions::default(),
-                            }),
-                            primitive: PrimitiveState {
-                                topology: PrimitiveTopology::TriangleStrip,
-                                ..Default::default()
-                            },
-                            depth_stencil: depth_stencil.clone(),
-                            multisample,
-                            multiview: None,
-                            cache: None,
-                        }));
-
-                    cache.push((format, multisample, depth_stencil, pipeline.clone()));
-
-                    pipeline
-                })
-                .clone()
-        }
+                pipeline
+            })
+            .clone()
     }
 }
